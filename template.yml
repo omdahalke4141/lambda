@@ -1,0 +1,35 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+
+Resources:
+  LambdaFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: AddNumbersFunction
+      Handler: app.lambda_handler
+      Runtime: python3.10
+      CodeUri: ./src
+      Timeout: 20
+      Policies: AWSLambdaBasicExecutionRole
+
+  ApiGateway:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: dev
+      DefinitionBody:
+        openapi: 3.0.1
+        info:
+          title: AddNumbersAPI
+          version: 1.0
+        paths:
+          /add:
+            get:
+              x-amazon-apigateway-integration:
+                uri:
+                  Fn::Sub: >-
+                    arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LambdaFunction.Arn}/invocations
+                httpMethod: POST
+                type: aws_proxy
+              responses:
+                default:
+                  description: Default response
